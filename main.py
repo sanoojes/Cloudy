@@ -932,7 +932,7 @@ class NoInternetConnection(Exception):
     pass
 
 
-async def check_internet_connection():
+async def check_internet_connection(CHECK_INTERNET_URL):
     try:
         logging.info("Checking Your Internet Connection...")
         async with aiohttp.ClientSession() as session:
@@ -1023,9 +1023,9 @@ username = "User"
 
 # ----------------------------------------------------------------------------
 async def main():
-    """Main function to run the conversational AI system."""
+    # Main function to run the conversational AI system.
     try:
-        await check_internet_connection()
+        await check_internet_connection(CHECK_INTERNET_URL)
         await cleanup_files(folders_to_cleanup)
         recognizer = sr.Recognizer()
         detected_person = await load_user()

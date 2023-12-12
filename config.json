@@ -7,8 +7,10 @@
     "TRAINING_FOLDER":"training",
     "FACIAL_DATA_FOLDER":"face_data",
     "FACIAL_DATA_FILE":"facial_data.json",
-    "OFFLINE_DATA_FOLDER":"training\\offline",
-    "MESSAGES_DATA_FOLDER":"db\\messages",
+    "OFFLINE_DATA_FOLDER":"training//offline",
+    "MESSAGES_DATA_FOLDER":"db/messages",
     "EDGE_VOICE_NAME":"en-US-JennyNeural",
-    "TTS_FILE" :"./src/data.mp3"
+    "RECOGNIZER_MODEL":"google",
+    "CHECK_INTERNET_URL":"https://1.1.1.1",
+    "TTS_FILE":"./src/data.mp3"
 }
