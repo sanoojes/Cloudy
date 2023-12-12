@@ -1,0 +1,14 @@
+{
+    "OPENAI_API_KEY":"Your api key here",
+    "LOG_FILE" :"db\\logs.txt",
+    "GOOGLE_CX":"cx key",
+    "GOOGLE_API_KEY":"google api",
+    "LISTENING_TIMEOUT" :"5",
+    "TRAINING_FOLDER":"training",
+    "FACIAL_DATA_FOLDER":"face_data",
+    "FACIAL_DATA_FILE":"facial_data.json",
+    "OFFLINE_DATA_FOLDER":"training\\offline",
+    "MESSAGES_DATA_FOLDER":"db\\messages",
+    "EDGE_VOICE_NAME":"en-US-JennyNeural",
+    "TTS_FILE" :"./src/data.mp3"
+}

@@ -1,0 +1,10 @@
+[
+    {
+        "role": "system",
+        "content": "System Instructions"
+    },
+    {
+        "role": "user",
+        "content": "User Query"
+    }
+]
