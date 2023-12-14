@@ -12,7 +12,7 @@ CONFIG_TYPE = 'config' # 'config' for config.json and 'env' for dotenv file
 # ----------------------------------------------------------------------------
 import contextlib
 import math
-import subprocess
+import pickle
 
 with contextlib.redirect_stdout(None):
     import re
@@ -21,17 +21,15 @@ with contextlib.redirect_stdout(None):
     import time
     import json
     import shutil
-    import pygame
     import asyncio
     import logging
     import aiohttp
     import schedule
-    import numpy as np
-    from gtts import gTTS
     import face_recognition
     from openai import OpenAI
     from dotenv import load_dotenv
     import speech_recognition as sr
+    from brain import *
     from collections import Counter, deque
 # ----------------------------------------------------------------------------
 
@@ -165,80 +163,6 @@ def get_response_from_openai(user_input, messages):
 # ----------------------------------------------------------------------------
 
 # ----------------------------------------------------------------------------
-async def convert_text_to_audio(text):
-    """
-    Converts the provided text into an audio file using the Edge-TTS library.
-
-    Parameters:
-    text (str): Text to convert into audio.
-
-    Returns:
-    Tuple[str, bytes] or None: Tuple containing path to the generated audio file and command output,
-                               or None if there's an error.
-    """
-    try:
-        voice = EDGE_VOICE_NAME
-        clean_text = re.sub(r"[^a-zA-Z0-9\s.]", "", text)
-        path = TTS_FILE
-        command = (
-            f'edge-tts --voice "{voice}" --text "{clean_text}" --write-media {path}'
-        )
-
-        process = await asyncio.create_subprocess_shell(
-            command,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE
-        )
-
-        stdout, stderr = await process.communicate()
-
-        if process.returncode != 0:
-            # Log the error if the command fails
-            print(f"Error occurred: {stderr.decode('utf-8')}")
-            return None
-
-        return path  # Return the path to the generated audio file and command output
-
-    except Exception as e:
-        print("TTS failed:", e)
-        return None
-
-
-async def play_audio(audio_file):
-    """
-    Plays the audio file using the Pygame library asynchronously.
-
-    Parameters:
-    audio_file (str): Path to the audio file.
-    """
-    try:
-        logger.debug("Playing Audio...")
-        pygame.init()
-        pygame.mixer.init()
-
-        pygame.mixer.music.load(audio_file)
-        pygame.mixer.music.play()
-
-        while pygame.mixer.music.get_busy():
-            await asyncio.sleep(0.1)
-
-    except (pygame.error, IOError) as e:
-        logger.error("Error during audio playback:", e)
-        # Handle errors related to audio playback here.
-    except KeyboardInterrupt:
-        logger.info("Keyboard interrupt detected")
-        quit()
-    except Exception as e:
-        logger.error("Unexpected error during audio playback:", e)
-        # Handle any other unexpected errors here.
-    finally:
-        pygame.mixer.quit()
-        pygame.quit()
-        # Remove the temporary audio file
-        if audio_file and os.path.exists(audio_file):
-            os.remove(audio_file)
-
-
 async def play_text_as_audio(text):
     """
     Converts the provided text into audio and plays it asynchronously.
@@ -250,141 +174,15 @@ async def play_text_as_audio(text):
     - None
     """
     try:
-        audio_file = await convert_text_to_audio(text)
-        if audio_file:
-            await play_audio(audio_file)
+        audio_file = await edge_tts(text)
+        # audio_file = await gtts(text) # For GTTS
+        if audio_file:    
+            await play(audio_file)
     except Exception as e:
         logger.error("Unexpected error during text to audio:", e)
+    if audio_file and os.path.exists(audio_file):
+            os.remove(audio_file)
 # ----------------------------------------------------------------------------
-
-# ----------------------------------------------------------------------------
-# Function to play audio with GTTS library
-#
-# def play_text_as_audio(text):
-#     try:
-#         pygame.init()
-#         pygame.mixer.init()
-
-#         try:
-#             logger.debug("Trying to convert Text to Speech...")
-#             tts = gTTS(text=text, lang="en")
-#         except TimeoutError:
-#             logger.debug("TTS failed",TimeoutError)
-#             logger.info("Check Your Internet. It might be slow !")
-#         except Exception as e:
-#             logger.debug("TTS failed",e)
-#             logger.info("Error Occurred During TTS !")
-
-#         # Create a temporary file to store the audio
-#         temp_audio_file = tempfile.NamedTemporaryFile(delete=False)
-#         tts.write_to_fp(temp_audio_file)
-#         temp_audio_file.close()
-
-#         pygame.mixer.music.load(temp_audio_file.name)
-#         pygame.mixer.music.play()
-
-#         # Wait for the audio to finish playing
-#         while pygame.mixer.music.get_busy():
-#             time.sleep(0.1)
-
-#     except (pygame.error, IOError) as e:
-#         logger.info("Error during audio playback:", e)
-#         # Handle errors related to audio playback here.
-
-#     except KeyboardInterrupt:
-#         logger.info("Keyboard interrupt detected")
-#         quit()
-
-#     except Exception as e:
-#         logger.info("Unexpected error during audio playback:", e)
-#         # Handle any other unexpected errors here.
-
-#     finally:
-#         pygame.mixer.quit()
-#         pygame.quit()
-#         # Remove the temporary audio file
-#         os.unlink(temp_audio_file.name)
-#
-# ----------------------------------------------------------------------------
-
-# #----------------------------------------------------------------------------
-# # Functions to play audio with edge-tts library for realistic voice
-# def convert_text_to_audio(text):
-#     """
-#     Converts the provided text into an audio file using the Edge-TTS library.
-
-#     Parameters:
-#     text (str): Text to convert into audio.
-#     Returns:
-#     str: Path to the generated audio file."""
-#     voice = EDGE_VOICE_NAME
-#     clean_text = re.sub(r'[^a-zA-Z0-9\s.]', '', text)
-#     command = (
-#         f'edge-tts --voice "{voice}" --text "{clean_text}" --write-media "./src/data.mp3"'
-#     )
-
-#     try:
-#         logger.debug("Trying to convert Text to Speech...")
-#         subprocess.call(command, shell=False)
-#     except Exception as e:
-#         logger.debug("TTS failed", e)
-#         logger.info("Error Occurred During TTS !")
-#         # Handle TTS failure if needed
-#         return None
-
-#     return "./src/data.mp3"  # Return the path to the generated audio file
-
-# def play_audio(audio_file):
-#     '''
-#     Plays the audio file using the Pygame library.
-
-#     Parameters:
-#     audio_file (str): Path to the audio file.
-#     '''
-#     try:
-#         logging.debug("Playing Audio...")
-#         pygame.init()
-#         pygame.mixer.init()
-
-#         pygame.mixer.music.load(audio_file)
-#         pygame.mixer.music.play()
-
-#         while pygame.mixer.music.get_busy():
-#             time.sleep(0.1)
-
-#     except (pygame.error, IOError) as e:
-#         logger.error("Error during audio playback:", e)
-#         # Handle errors related to audio playback here.
-#     except KeyboardInterrupt:
-#         logger.info("Keyboard interrupt detected")
-#         quit()
-#     except Exception as e:
-#         logger.error("Unexpected error during audio playback:", e)
-#         # Handle any other unexpected errors here.
-#     finally:
-#         pygame.mixer.quit()
-#         pygame.quit()
-#         # Remove the temporary audio file
-#         if audio_file and os.path.exists(audio_file):
-#             os.remove(audio_file)
-
-# def play_text_as_audio(text):
-#     '''
-#     Converts the provided text into audio and plays it.
-
-#     Parameters:
-#     - text (str): The text to be converted into audio and played.
-
-#     Returns:
-#     - None
-#     '''
-#     try:
-#         audio_file = convert_text_to_audio(text)
-#         if audio_file:
-#             play_audio(audio_file)
-#     except Exception as e:
-#         logger.error("Unexpected error during text to audio:", e)
-# #----------------------------------------------------------------------------
 
 # ----------------------------------------------------------------------------
 async def get_google_desc(query):
@@ -667,7 +465,7 @@ async def process_user_input(recognizer, source, offline_ai_response, messages):
             if "cloudy" in speech.lower():
                 if "cloudy change user" in speech.lower():
                     logging.info("Trying To change user..")
-                    asyncio.run(play_text_as_audio("Trying To change user"))
+                    await play_text_as_audio("Trying To change user")
                     detected_person = await load_user()
                     offline_ai_response.clear()
                     global offline_user_file
@@ -679,7 +477,7 @@ async def process_user_input(recognizer, source, offline_ai_response, messages):
                     messages = load_messages(get_messages_file(detected_person))
                     global ai_instructions
                     ai_instructions = generate_ai_instructions(detected_person)
-                    play_greeting_audio(detected_person)
+                    await play_greeting_audio(detected_person)
                 else:
                     messages.append({"role": "system", "content": ai_instructions})
                     if detect_question(speech):
@@ -738,26 +536,20 @@ async def load_user():
 def save_facial_data(known_face_encodings, known_face_names):
     if not os.path.exists(facial_data_folder):
         os.makedirs(facial_data_folder)
-    # Convert NumPy arrays to lists before serialization
-    known_face_encodings_serializable = [
-        encoding.tolist() for encoding in known_face_encodings
-    ]
 
-    data = {"encodings": known_face_encodings_serializable, "names": known_face_names}
+    data = {"encodings": known_face_encodings, "names": known_face_names}
 
-    with open(os.path.join(facial_data_folder, FACIAL_DATA_FILE), "w") as file:
-        json.dump(data, file)
+    with open(os.path.join(facial_data_folder, FACIAL_DATA_FILE), "wb") as file:
+        pickle.dump(data, file)
 # ----------------------------------------------------------------------------
 
 # ----------------------------------------------------------------------------
 def load_facial_data():
     data_file = os.path.join(facial_data_folder, FACIAL_DATA_FILE)
     if os.path.exists(data_file):
-        with open(data_file, "r") as file:
-            data = json.load(file)
-            known_face_encodings = [
-                np.array(encoding) for encoding in data["encodings"]
-            ]
+        with open(data_file, "rb") as file:
+            data = pickle.load(file)
+            known_face_encodings = data["encodings"]
             known_face_names = data["names"]
             return known_face_encodings, known_face_names
     return [], []
@@ -812,7 +604,7 @@ async def recognize_faces(video_capture, known_face_encodings, known_face_names)
                         known_face_encodings.append(face_encoding)
                         known_face_names.append(new_name)
                         name = new_name
-                        play_text_as_audio("User registration success !")
+                        await play_text_as_audio("User registration success !")
                         logging.info("User registration successful ! Username: " + name)
                     else:
                         name = "Unknown"
@@ -932,7 +724,7 @@ class NoInternetConnection(Exception):
     pass
 
 
-async def check_internet_connection(CHECK_INTERNET_URL):
+async def check_internet_connection():
     try:
         logging.info("Checking Your Internet Connection...")
         async with aiohttp.ClientSession() as session:
@@ -971,6 +763,7 @@ if CONFIG_TYPE == "config":
     CHECK_INTERNET_URL = config.get("CHECK_INTERNET_URL")
     OPENAI_API_KEY = config.get("OPENAI_API_KEY")
     TTS_FILE = config.get("TTS_FILE")
+    ELEVEN_LABS_VOICE =config.get("ELEVEN_LABS_VOICE")
 elif CONFIG_TYPE == "env":
     print("Loading Configurations from .env file")
     LOG_FILE = os.getenv("LOG_FILE")
@@ -987,6 +780,7 @@ elif CONFIG_TYPE == "env":
     CHECK_INTERNET_URL = os.getenv("CHECK_INTERNET_URL")
     OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
     TTS_FILE = os.getenv("TTS_FILE")
+    ELEVEN_LABS_VOICE = os.getenv("ELEVEN_LABS_VOICE")
 # ----------------------------------------------------------------------------
 folders_to_cleanup = [MESSAGES_DATA_FOLDER]
 # ----------------------------------------------------------------------------
@@ -1023,9 +817,9 @@ username = "User"
 
 # ----------------------------------------------------------------------------
 async def main():
-    # Main function to run the conversational AI system.
+    """Main function to run the conversational AI system."""
     try:
-        await check_internet_connection(CHECK_INTERNET_URL)
+        await check_internet_connection()
         await cleanup_files(folders_to_cleanup)
         recognizer = sr.Recognizer()
         detected_person = await load_user()

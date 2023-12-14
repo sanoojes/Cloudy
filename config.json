@@ -6,10 +6,10 @@
     "LISTENING_TIMEOUT" :"5",
     "TRAINING_FOLDER":"training",
     "FACIAL_DATA_FOLDER":"face_data",
-    "FACIAL_DATA_FILE":"facial_data.json",
+    "FACIAL_DATA_FILE":"facial_data.pickle",
     "OFFLINE_DATA_FOLDER":"training//offline",
     "MESSAGES_DATA_FOLDER":"db/messages",
-    "EDGE_VOICE_NAME":"en-US-JennyNeural",
+    "EDGE_VOICE_NAME":"en-IN-NeerjaNeural",
     "RECOGNIZER_MODEL":"google",
     "CHECK_INTERNET_URL":"https://1.1.1.1",
     "TTS_FILE":"./src/data.mp3"
