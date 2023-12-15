@@ -1,7 +1,6 @@
 import os
 import shutil
 import asyncio
-import time
 from main import logger
 
 async def cleanup_folder(folder_path):

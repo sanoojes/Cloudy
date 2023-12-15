@@ -24,6 +24,7 @@ def get_response_from_openai(messages):
         
         # Append the cleaned AI response to messages
         messages.append({"role": "assistant", "content": clean_text})
+        print(messages)
         return clean_text
 
     except KeyboardInterrupt:
@@ -84,7 +85,7 @@ def detect_question(input_string):
     Returns:
     - bool: True if a question is detected, False otherwise.
     """
-    question_keywords = ["who", "what", "when", "where", "why", "how", "tell"]
+    question_keywords = ["who", "what", "when", "where", "why", "how", "tell","explain"]
     for keyword in question_keywords:
         if keyword in input_string.lower():
             return True

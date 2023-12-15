@@ -8,6 +8,7 @@ The system interacts with users through speech recognition, AI responses, and fa
 
 Author: Sachu-Settan
 """
+
 CONFIG_TYPE = 'config' # 'config' for config.json and 'env' for dotenv file
 # ----------------------------------------------------------------------------
 import contextlib
@@ -317,11 +318,11 @@ async def process_user_input(recognizer, source, offline_ai_response, messages):
                     username = detected_person
                     messages.clear()
                     messages = load_messages(get_messages_file(detected_person))
-                    global ai_instructions
-                    ai_instructions = generate_ai_instructions(detected_person)
+                    global AI_INS
+                    AI_INS = generate_ai_instructions(detected_person)
                     await play_greeting_audio(detected_person)
                 else:
-                    messages.append({"role": "system", "content": ai_instructions})
+                    messages.append({"role": "system", "content": AI_INS})
                     if detect_question(speech):
                         s = speech.replace("cloudy", " ")
                         s = s.replace("rowdy", " ")
@@ -417,19 +418,21 @@ offline_ai_response = {}
 facial_data_folder = os.path.join(TRAINING_FOLDER, FACIAL_DATA_FOLDER)
 # ----------------------------------------------------------------------------
 client = OpenAI(api_key=OPENAI_API_KEY)
-AI_INS = ai_instructions = """\
-Hello! I'm Cloudy, your voice-based chat assistant, developed by Sachu and Vishnu. I strive to provide concise, up-to-date information in 2-3 lines as an interactive educational robot.
+AI_INS =  """\
+Hello! I'm Cloudy, your voice-based chat assistant, developed by Sachu and Vishnu. I communicate solely through voice interactions and aim to provide information without generating code snippets.
 
-Guidelines:
-- I focus on brief, relevant responses.
-- If search results aren't relevant, I'll engage directly with you.
-- When presenting up-to-date findings:
-    - I won't require verification from external sources.
-    - If the results don't match your query, I'll seek clarification.
-    - I'll summarize relevant findings concisely.
-    - If the results seem off-topic, I'll engage you in conversation.
+Guidelines for Interaction:
+- Please ask questions or request information in a manner that doesn't prompt code generation.
+- I focus on delivering voice-based responses without technical details or code snippets.
+- If search results aren't relevant, I'll engage directly with voice-based information.
+- When providing responses:
+    - I'll emphasize voice-based details, avoiding technical explanations or code examples.
+    - If needed, I'll ask for clarification to ensure accuracy in my voice-based answers.
+    - I strive to offer concise and relevant information suitable for voice interaction.
 
-I continuously update my knowledge to ensure the information I provide is current and accurate. Ask me anything!
+I continuously update my knowledge to ensure the information I provide is current and accurate. Please ask queries in a way that aligns with voice-based responses!
+
+User: My name is {user}.
 """
 # ----------------------------------------------------------------------------
 # Set up logging
@@ -454,8 +457,8 @@ async def main():
         global messages
         messages.clear()
         messages = load_messages(get_messages_file(detected_person))
-        global ai_instructions
-        ai_instructions = generate_ai_instructions(detected_person)
+        global AI_INS
+        AI_INS = generate_ai_instructions(detected_person)
         await play_greeting_audio(detected_person)
         while True:
             schedule.run_pending()
@@ -464,9 +467,16 @@ async def main():
                 break
     except NoInternetConnection:
         exit()
+    except KeyboardInterrupt:
+        logger.info("Keyboard interrupt. Turning off the program")
+        quit()
 # ----------------------------------------------------------------------------
 
 # ----------------------------------------------------------------------------
 if __name__ == "__main__":
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        logger.info("Keyboard interrupt. Turning off the program")
+        quit()
 # ----------------------------------------------------------------------------
