@@ -11,26 +11,19 @@ Author: Sachu-Settan
 CONFIG_TYPE = 'config' # 'config' for config.json and 'env' for dotenv file
 # ----------------------------------------------------------------------------
 import contextlib
-import math
-import pickle
 
 with contextlib.redirect_stdout(None):
-    import re
-    import os
-    import cv2
+    import os 
     import time
     import json
-    import shutil
+    import math 
     import asyncio
     import logging
-    import aiohttp
     import schedule
-    import face_recognition
-    from openai import OpenAI
-    from dotenv import load_dotenv
     import speech_recognition as sr
     from brain import *
-    from collections import Counter, deque
+    from openai import OpenAI
+    from dotenv import load_dotenv
 # ----------------------------------------------------------------------------
 
 # ----------------------------------------------------------------------------
@@ -40,26 +33,6 @@ LOGGING_LEVEL = logging.INFO
 # ----------------------------------------------------------------------------
 # Load environment variables from .env file.If present
 load_dotenv()
-# ----------------------------------------------------------------------------
-
-# ----------------------------------------------------------------------------
-# Load configurations from JSON file
-def load_config(CONFIG_FILE):
-    """
-    Loads configurations from a JSON file.
-
-    Parameters:
-    - CONFIG_FILE (str): Path to the configuration JSON file.
-
-    Returns:
-    - dict: Loaded configurations.
-    """
-    try:
-        with open(CONFIG_FILE, "r") as file:
-            return json.load(file)
-    except FileNotFoundError as e:
-        logger.error("Config file not found at specified path: %s", CONFIG_FILE)
-        raise FileNotFoundError(f"Config file not found: {CONFIG_FILE}") from e
 # ----------------------------------------------------------------------------
 
 # ----------------------------------------------------------------------------
@@ -80,24 +53,6 @@ def setup_logging(log_file):
     # Schedule log clearing task every 10 minutes
     schedule.every(10).minutes.do(clear_log_file, log_file)
     return logger
-# ----------------------------------------------------------------------------
-
-# ----------------------------------------------------------------------------
-def clear_log_file(log_file):
-    """
-    Clears the log file at regular intervals.
-
-    Parameters:
-    log_file (str): Path to the log file.
-    """
-    try:
-        with open(log_file, "w"):
-            pass  # Clear the log file by opening it in write mode
-        logger.debug(
-            f"Cleared log file '{log_file}' at {time.strftime('%Y-%m-%d %H:%M:%S')}"
-        )
-    except Exception as e:
-        logger.exception(f"Error occurred while clearing log file: {e}")
 # ----------------------------------------------------------------------------
 
 # ----------------------------------------------------------------------------
@@ -132,114 +87,92 @@ def load_json(filename):
     except FileNotFoundError:
         return {}
 # ----------------------------------------------------------------------------
-
+    
 # ----------------------------------------------------------------------------
-# Function to get AI response from OpenAI
-def get_response_from_openai(user_input, messages):
+# Load configurations from JSON file
+def load_config(CONFIG_FILE):
     """
-    Gets AI response from OpenAI.
+    Loads configurations from a JSON file.
 
     Parameters:
-    - user_input (str): User's input/query.
-    - messages (list): List of messages in the conversation.
+    - CONFIG_FILE (str): Path to the configuration JSON file.
 
     Returns:
-    - str: AI response.
+    - dict: Loaded configurations.
     """
-    cache_key = user_input.lower()
     try:
-        chat_reply = client.chat.completions.create(
-            model="gpt-3.5-turbo", messages=messages
+        with open(CONFIG_FILE, "r") as file:
+            return json.load(file)
+    except FileNotFoundError as e:
+        logger.error("Config file not found at specified path: %s", CONFIG_FILE)
+        raise FileNotFoundError(f"Config file not found: {CONFIG_FILE}") from e
+# ----------------------------------------------------------------------------
+
+# ----------------------------------------------------------------------------
+# Load messages from a JSON file
+def load_messages(filename):
+    """
+    Loads conversation messages from a JSON file.
+
+    Parameters:
+    - filename (str): Path to the JSON file.
+
+    Returns:
+    - list: Loaded conversation messages.
+    """
+    try:
+        logger.debug("Loading Messages File...")
+        with open(filename, "r") as file:
+            logger.debug("Success Loaded Messages File")
+            return json.load(file)
+    except FileNotFoundError:
+        logger.debug("File specified not found.")
+        return []
+# ----------------------------------------------------------------------------
+
+# ----------------------------------------------------------------------------
+def load_default_offline_ai_response(offline_user_file):
+    """
+    Loads offline AI responses from a JSON file.
+
+    Parameters:
+    - offline_user_file (str): Path to the offline AI responses JSON file.
+
+    Returns:
+    - dict: Loaded offline AI responses.
+    """
+    global offline_ai_response
+    try:
+        offline_ai_response = load_json(offline_user_file)
+    except Exception as e:
+        logger.exception("Unexpected error occurred: %s", e)
+    finally:
+        return offline_ai_response
+# ----------------------------------------------------------------------------
+
+# Load Default Offline Responce
+default_offline_responce = load_default_offline_ai_response(
+    "training/offline/default_offline.json"
+)
+
+# ----------------------------------------------------------------------------
+def clear_log_file(log_file):
+    """
+    Clears the log file at regular intervals.
+
+    Parameters:
+    log_file (str): Path to the log file.
+    """
+    try:
+        with open(log_file, "w"):
+            pass  # Clear the log file by opening it in write mode
+        print(
+            f"Cleared log file '{log_file}' at {time.strftime('%Y-%m-%d %H:%M:%S')}"
         )
-        ai_response = chat_reply.choices[0].message.content
-        messages.append({"role": "assistant", "content": ai_response})
-        return ai_response
-    except KeyboardInterrupt:
-        logger.info("Keyboard interrupt detected")
-        quit()
     except Exception as e:
-        logger.debug(f"Error: Unexpected error occurred:{e}")
-        return "Error: Unexpected error occurred check your openAI API key."
+        print(f"Error occurred while clearing log file: {e}")
 # ----------------------------------------------------------------------------
-
-# ----------------------------------------------------------------------------
-async def play_text_as_audio(text):
-    """
-    Converts the provided text into audio and plays it asynchronously.
-
-    Parameters:
-    - text (str): The text to be converted into audio and played.
-
-    Returns:
-    - None
-    """
-    try:
-        audio_file = await edge_tts(text)
-        # audio_file = await gtts(text) # For GTTS
-        if audio_file:    
-            await play(audio_file)
-    except Exception as e:
-        logger.error("Unexpected error during text to audio:", e)
-    if audio_file and os.path.exists(audio_file):
-            os.remove(audio_file)
-# ----------------------------------------------------------------------------
-
-# ----------------------------------------------------------------------------
-async def get_google_desc(query):
-    """
-    Fetches search results from Google for the given query.
-
-    Parameters:
-    query (str): Query to search on Google.
-    Returns:
-    str: Description or snippet obtained from Google search results.
-    """
-    base_url = "https://www.googleapis.com/customsearch/v1"
-
-    params = {"key": GOOGLE_API_KEY, "cx": GOOGLE_CX, "q": query}
-
-    try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get(base_url, params=params) as response:
-                response.raise_for_status()  # Raises an exception for 4xx/5xx status codes
-
-                data = await response.json()
-
-                # Extracting search results
-                if "items" in data:
-                    search_results = data["items"]
-                    data2 = ""
-                    for i in search_results:
-                        data2 += i["snippet"]
-                    logger.debug("Google result: " + data2)
-                    return data2
-                else:
-                    logger.debug("No search results found.")
-
-    except aiohttp.ClientError as e:
-        logger.exception(f"Client error occurred: {e}")
-    except Exception as e:
-        logger.exception(f"An error occurred: {e}")
-# ----------------------------------------------------------------------------
-
-# ----------------------------------------------------------------------------
-def detect_question(input_string):
-    """
-    Detects if a question is present in the input string.
-
-    Parameters:
-    - input_string (str): Input string to be analyzed.
-
-    Returns:
-    - bool: True if a question is detected, False otherwise.
-    """
-    question_keywords = ["who", "what", "when", "where", "why", "how", "tell"]
-    for keyword in question_keywords:
-        if keyword in input_string.lower():
-            return True
-    return False
-# ----------------------------------------------------------------------------
-
+        
 # ----------------------------------------------------------------------------
 # Optimized speech recognition function
 def recognize_speech(recognizer, source):
@@ -311,46 +244,6 @@ def recognize_speech(recognizer, source):
 # ----------------------------------------------------------------------------
 
 # ----------------------------------------------------------------------------
-# Load messages from a JSON file
-def load_messages(filename):
-    """
-    Loads conversation messages from a JSON file.
-
-    Parameters:
-    - filename (str): Path to the JSON file.
-
-    Returns:
-    - list: Loaded conversation messages.
-    """
-    try:
-        logger.debug("Loading Messages File...")
-        with open(filename, "r") as file:
-            logger.debug("Success Loaded Messages File")
-            return json.load(file)
-    except FileNotFoundError:
-        logger.debug("File specified not found.")
-        return []
-# ----------------------------------------------------------------------------
-
-# ----------------------------------------------------------------------------
-def get_offline_response_file(username):
-    """
-    Generates the file path for storing offline AI responses based on the username.
-
-    Parameters:
-    - username (str): The username used to create the file path.
-
-    Returns:
-    - str: The file path for storing offline AI responses based on the username.
-    """
-    if not os.path.exists(OFFLINE_DATA_FOLDER):
-        os.makedirs(OFFLINE_DATA_FOLDER)
-    filename = username + "_offline_data.json"
-    file = os.path.join(OFFLINE_DATA_FOLDER, filename)
-    return file
-# ----------------------------------------------------------------------------
-
-# ----------------------------------------------------------------------------
 def get_messages_file(username):
     """
     Gets the file path for storing conversation messages based on the username.
@@ -369,57 +262,9 @@ def get_messages_file(username):
 # ----------------------------------------------------------------------------
 
 # ----------------------------------------------------------------------------
-def load_default_offline_ai_response(offline_user_file):
-    """
-    Loads offline AI responses from a JSON file.
-
-    Parameters:
-    - offline_user_file (str): Path to the offline AI responses JSON file.
-
-    Returns:
-    - dict: Loaded offline AI responses.
-    """
-    global offline_ai_response
-    try:
-        offline_ai_response = load_json(offline_user_file)
-    except Exception as e:
-        logger.exception("Unexpected error occurred: %s", e)
-    finally:
-        return offline_ai_response
-# ----------------------------------------------------------------------------
-
-# Load Default Offline Responce
-default_offline_responce = load_default_offline_ai_response(
-    "training/offline/default_offline.json"
-)
-
-# ----------------------------------------------------------------------------
-def load_offline_ai_response(offline_user_file):
-    """
-    Loads offline AI responses from a JSON file.
-
-    Parameters:
-    - offline_user_file (str): Path to the offline AI responses JSON file.
-
-    Returns:
-    - dict: Loaded offline AI responses.
-    """
-    global offline_ai_response
-    try:
-        offline_ai_response = load_json(offline_user_file)
-        offline_ai_response.update(default_offline_responce)
-    except Exception as e:
-        logger.exception("Unexpected error occurred: %s", e)
-    finally:
-        return offline_ai_response
-# ----------------------------------------------------------------------------
-
-# ----------------------------------------------------------------------------
 async def handle_conversation(recognizer, username):
-    offline_user_file = get_offline_response_file(username)
-    offline_ai_response = load_offline_ai_response(offline_user_file)
     messages = []  # Initialize messages or use an appropriate data structure
-
+    offline_ai_response = default_offline_responce
     try:
         while True:
             schedule.run_pending()
@@ -468,9 +313,6 @@ async def process_user_input(recognizer, source, offline_ai_response, messages):
                     await play_text_as_audio("Trying To change user")
                     detected_person = await load_user()
                     offline_ai_response.clear()
-                    global offline_user_file
-                    offline_user_file = get_offline_response_file(detected_person)
-                    offline_ai_response = load_offline_ai_response(offline_user_file)
                     global username
                     username = detected_person
                     messages.clear()
@@ -493,12 +335,9 @@ async def process_user_input(recognizer, source, offline_ai_response, messages):
 
                     if not response_from_openai:
                         response_from_openai = get_response_from_openai(
-                            speech, messages
+                            messages
                         )
                         offline_ai_response[speech.lower()] = response_from_openai
-                        save_json(
-                            offline_ai_response, get_offline_response_file(username)
-                        )
 
                     logger.info("cloudy: %s", response_from_openai)
                     await play_text_as_audio(response_from_openai)
@@ -531,217 +370,6 @@ async def load_user():
     logging.info("Detected User: " + detected_name)
     return detected_name
 # ----------------------------------------------------------------------------
-
-# ----------------------------------------------------------------------------
-def save_facial_data(known_face_encodings, known_face_names):
-    if not os.path.exists(facial_data_folder):
-        os.makedirs(facial_data_folder)
-
-    data = {"encodings": known_face_encodings, "names": known_face_names}
-
-    with open(os.path.join(facial_data_folder, FACIAL_DATA_FILE), "wb") as file:
-        pickle.dump(data, file)
-# ----------------------------------------------------------------------------
-
-# ----------------------------------------------------------------------------
-def load_facial_data():
-    data_file = os.path.join(facial_data_folder, FACIAL_DATA_FILE)
-    if os.path.exists(data_file):
-        with open(data_file, "rb") as file:
-            data = pickle.load(file)
-            known_face_encodings = data["encodings"]
-            known_face_names = data["names"]
-            return known_face_encodings, known_face_names
-    return [], []
-# ----------------------------------------------------------------------------
-
-# ----------------------------------------------------------------------------
-async def recognize_faces(video_capture, known_face_encodings, known_face_names):
-    try:
-        detections = deque(
-            maxlen=5
-        )  # Using deque for storing detections with a maximum length
-        detected_name = None
-
-        register_face = None  # Initialize register_face outside the loop
-
-        while True:
-            schedule.run_pending()
-            ret, frame = video_capture.read()
-
-            small_frame = cv2.resize(frame, (0, 0), fx=0.25, fy=0.25)
-            rgb_small_frame = small_frame[:, :, ::-1]
-
-            face_locations = face_recognition.face_locations(rgb_small_frame)
-            face_encodings = face_recognition.face_encodings(
-                rgb_small_frame, face_locations
-            )
-
-            face_names = []
-
-            for face_encoding in face_encodings:
-                matches = face_recognition.compare_faces(
-                    known_face_encodings, face_encoding
-                )
-                name = "Unknown"
-
-                if True in matches:
-                    matched_index = matches.index(True)
-                    name = known_face_names[matched_index]
-                else:
-                    await play_text_as_audio(
-                            "Hello there! Would you like to register? (Press 'y' to register)"
-                        )
-                    logging.info(
-                        "Hello there! Would you like to register? (Press 'y' to register)"
-                    )
-                    register_face = input().lower()
-
-                    if register_face == "y":
-                        await play_text_as_audio("Please enter your name:")
-                        logging.info("Please enter your name:")
-                        new_name = input()
-                        known_face_encodings.append(face_encoding)
-                        known_face_names.append(new_name)
-                        name = new_name
-                        await play_text_as_audio("User registration success !")
-                        logging.info("User registration successful ! Username: " + name)
-                    else:
-                        name = "Unknown"
-
-                face_names.append(name)
-
-            detections.append(face_names)
-
-            # Check for consistent detections in the last 5 frames
-            occurrences = Counter(name for sublist in detections for name in sublist)
-            detected_name = next(
-                (name for name, count in occurrences.items() if count >= 3), None
-            )
-
-            if detected_name:
-                detections.clear()
-                return detected_name
-
-            if register_face == "y":
-                save_facial_data(known_face_encodings, known_face_names)
-    except KeyboardInterrupt:
-        logger.info("Keyboard interrupt detected")
-        quit()
-    except Exception as e:
-        logger.info("Unexpected error during face recognition:", e)
-# ----------------------------------------------------------------------------
-
-# ----------------------------------------------------------------------------
-# Modify the run_face_recognition function to receive the detected name
-async def run_face_recognition():
-    try:
-        video_capture = cv2.VideoCapture(0)
-        known_face_encodings, known_face_names = load_facial_data()
-        detected_name = await recognize_faces(
-            video_capture, known_face_encodings, known_face_names
-        )
-        video_capture.release()
-        if detected_name is None:
-            detected_name = "User"
-        return detected_name
-    except KeyboardInterrupt:
-        logger.info("Keyboard interrupt detected during face recognition.")
-        quit()
-    except Exception as e:
-        logger.info("Unexpected error during face recognition:", e)
-# ----------------------------------------------------------------------------
-
-# ----------------------------------------------------------------------------
-# Function to play a greeting audio for the detected user's name
-async def play_greeting_audio(detected_person):
-    try:
-        greeting_text = f"Hi {detected_person}! How can I assist you today?"
-        logging.info("Greating User...")
-        logging.info("cloudy: " + greeting_text)
-        await play_text_as_audio(greeting_text)
-
-    except KeyboardInterrupt:
-        logger.info("Keyboard interrupt detected")
-        quit()
-    except Exception as e:
-        logger.info("Unexpected error during greeting audio:", e)
-# ----------------------------------------------------------------------------
-
-# ----------------------------------------------------------------------------
-# Function to generate an AI message based on the detected user's name
-def generate_ai_instructions(username):
-    global ai_instructions
-    ai_instructions = AI_INS
-    ai_instructions = ai_instructions.format(user=username)
-    return ai_instructions
-# ----------------------------------------------------------------------------
-
-# ----------------------------------------------------------------------------
-async def cleanup_folder(folder_path):
-    try:
-        if os.path.exists(folder_path):
-            # Perform asynchronous deletion of files within the folder
-            for root, dirs, files in os.walk(folder_path, topdown=False):
-                for file in files:
-                    file_path = os.path.join(root, file)
-                    os.remove(file_path)
-
-            # Asynchronously remove the empty directories
-            await asyncio.to_thread(shutil.rmtree, folder_path)
-            logging.debug(f"Folder '{folder_path}' deleted.")
-        else:
-            logging.debug(f"Folder '{folder_path}' does not exist.")
-    except PermissionError as pe:
-        logging.debug(
-            f"Permission error occurred: {pe}. Skipping folder '{folder_path}'."
-        )
-    except KeyboardInterrupt:
-        logger.info("Conversation terminated by user.")
-        quit()
-    except Exception as e:
-        logging.error(f"An error occurred during cleanup of '{folder_path}': {e}")
-
-async def cleanup_files(folders_to_cleanup):
-    try:
-        current_directory = os.getcwd()
-        logging.debug(f"Current working directory: {current_directory}")
-
-        # Asynchronously clean up each folder
-        cleanup_tasks = [
-            cleanup_folder(folder_path) for folder_path in folders_to_cleanup
-        ]
-        await asyncio.gather(*cleanup_tasks)
-    except KeyboardInterrupt:
-        logger.info("Conversation terminated by user.")
-        quit()
-    except Exception as e:
-        logging.error(f"An error occurred during cleanup: {e}")
-# ----------------------------------------------------------------------------
-
-# ----------------------------------------------------------------------------
-class NoInternetConnection(Exception):
-    pass
-
-
-async def check_internet_connection():
-    try:
-        logging.info("Checking Your Internet Connection...")
-        async with aiohttp.ClientSession() as session:
-            async with session.get(CHECK_INTERNET_URL) as response:
-                if response.status == 200:
-                    logging.info("Internet is connected")
-                else:
-                    logging.info("Internet is not connected")
-                    raise NoInternetConnection("Internet is not connected")
-    except aiohttp.ClientError:
-        logging.info("No internet connection available")
-        raise NoInternetConnection("No internet connection available")
-    except KeyboardInterrupt:
-        logger.info("Conversation terminated by user.")
-        quit()
-# ----------------------------------------------------------------------------
-
 
 # ----------------------------------------------------------------------------
 # Load environment variables from config.json or .env
@@ -789,20 +417,20 @@ offline_ai_response = {}
 facial_data_folder = os.path.join(TRAINING_FOLDER, FACIAL_DATA_FOLDER)
 # ----------------------------------------------------------------------------
 client = OpenAI(api_key=OPENAI_API_KEY)
-AI_INS = "Your AI name is Cloudy, and the user's name is {user}.\
-You were developed by Sachu and a team of students from st josephs public school and are designed to provide concise answers in 2,3 lines.\
-You serve as an interactive educational robot. \
-If the search results are not relevent:\
-- Interact with user\
-- Do not tell {user} about search results\
-Only User Query is provided by the user\
-When provided with up-to-date search results from a user query:\
-- Dont tell user to verify it from reliable sources as we are providing up to date information\
-- Ask to clarify their question if the query and search results are not relevent.\
-- Check the relevance of the results to the query.\
-- If the results make sense (are relevant), summarize them concisely.\
-- If the results seem irrelevant or confusing in relation to the query, engage the user in conversation."
-ai_instructions = AI_INS
+AI_INS = ai_instructions = """\
+Hello! I'm Cloudy, your voice-based chat assistant, developed by Sachu and Vishnu. I strive to provide concise, up-to-date information in 2-3 lines as an interactive educational robot.
+
+Guidelines:
+- I focus on brief, relevant responses.
+- If search results aren't relevant, I'll engage directly with you.
+- When presenting up-to-date findings:
+    - I won't require verification from external sources.
+    - If the results don't match your query, I'll seek clarification.
+    - I'll summarize relevant findings concisely.
+    - If the results seem off-topic, I'll engage you in conversation.
+
+I continuously update my knowledge to ensure the information I provide is current and accurate. Ask me anything!
+"""
 # ----------------------------------------------------------------------------
 # Set up logging
 logger = setup_logging(LOG_FILE)
@@ -810,8 +438,6 @@ logger = setup_logging(LOG_FILE)
 # Load messages
 messages = load_messages(get_messages_file("default"))
 # ----------------------------------------------------------------------------
-# Load Default Offline messages
-offline_user_file = get_offline_response_file("default")
 username = "User"
 # ----------------------------------------------------------------------------
 
@@ -830,8 +456,6 @@ async def main():
         messages = load_messages(get_messages_file(detected_person))
         global ai_instructions
         ai_instructions = generate_ai_instructions(detected_person)
-        global offline_user_file
-        offline_user_file = get_offline_response_file(detected_person)
         await play_greeting_audio(detected_person)
         while True:
             schedule.run_pending()

@@ -2,6 +2,9 @@ import shutil
 import subprocess
 import asyncio
 import io
+import os
+from .tts import *
+from main import logger
 
 # ----------------------------------------------------------------------------
 async def is_installed(lib_name: str) -> bool:
@@ -64,7 +67,7 @@ async def play(audio_file: str, use_pygame: bool = False, use_ffmpeg: bool = Tru
     else:
         await play_sounddevice(audio_file)
 # ----------------------------------------------------------------------------
-
+        
 # ----------------------------------------------------------------------------
 async def play_bytes(audio: bytes, notebook: bool = False, use_ffmpeg: bool = True) -> None:
     if notebook:
@@ -92,4 +95,41 @@ async def play_bytes(audio: bytes, notebook: bool = False, use_ffmpeg: bool = Tr
         data, _ = await asyncio.to_thread(sf.read, io.BytesIO(audio))
         sd.play(data)
         sd.wait()
+# ----------------------------------------------------------------------------
+
+# ----------------------------------------------------------------------------
+async def play_text_as_audio(text):
+    """
+    Converts the provided text into audio and plays it asynchronously.
+
+    Parameters:
+    - text (str): The text to be converted into audio and played.
+
+    Returns:
+    - None
+    """
+    try:
+        audio_file = await edge_tts(text)  # Placeholder for TTS function
+        # audio_file = await gtts(text)  # For GTTS, if needed
+        if audio_file:    
+            await play(audio_file)
+    except Exception as e:
+        logger.error("Unexpected error during text to audio:", e)
+
+    if audio_file and os.path.exists(audio_file):
+        os.remove(audio_file)
+# ----------------------------------------------------------------------------
+
+# ----------------------------------------------------------------------------
+async def play_greeting_audio(detected_person):
+    try:
+        greeting_text = f"Hi {detected_person}! How can I assist you today?"
+        logger.info("Greeting User...")
+        logger.info("cloudy: " + greeting_text)
+        await play_text_as_audio(greeting_text)
+    except KeyboardInterrupt:
+        logger.info("Keyboard interrupt detected")
+        quit()
+    except Exception as e:
+        logger.error("Unexpected error during greeting audio:", e)
 # ----------------------------------------------------------------------------

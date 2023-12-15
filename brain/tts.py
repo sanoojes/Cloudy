@@ -27,15 +27,16 @@ async def edge_tts(text: str):
         logger.debug("Trying to convert Text to Speech using edge-tts...")
 
         voice = EDGE_VOICE_NAME
-        clean_text = re.sub(r'[^\w\s\'\(\)\-\,\.\!\?]', '', text)
+        clean_text = re.sub(r'[\\"]', '', text)
+        clean_text = re.sub(r'\s+', ' ', clean_text)
         command = f'edge-tts --voice "{voice}" --text "{clean_text}" --write-media {TTS_FILE}'
-
         process = await asyncio.create_subprocess_shell(
             command,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL
         )
         await process.communicate()
+        await process.wait()
 
         return TTS_FILE  # Return the path to the generated audio file
     except Exception as e:
