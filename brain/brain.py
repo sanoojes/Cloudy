@@ -1,6 +1,7 @@
 import aiohttp
 from main import GOOGLE_API_KEY, GOOGLE_CX, logger, client, AI_INS
 import re
+import sys
 
 # ----------------------------------------------------------------------------
 # Function to generate AI instructions based on the detected user's name
@@ -29,7 +30,7 @@ def get_response_from_openai(messages):
 
     except KeyboardInterrupt:
         logger.info("Keyboard interrupt detected")
-        quit()
+        sys.exit(1)
         
     except Exception as e:
         logger.debug(f"Error: Unexpected error occurred: {e}")

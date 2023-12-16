@@ -3,6 +3,7 @@ import subprocess
 import asyncio
 import io
 import os
+import sys
 from .tts import *
 from main import logger
 
@@ -40,13 +41,13 @@ async def play(audio_file: str, use_pygame: bool = False, use_ffmpeg: bool = Tru
             print("Error during audio playback:", e)
         except KeyboardInterrupt:
             print("Keyboard interrupt detected")
-            quit()
+            sys.exit(1)
         except ModuleNotFoundError:
             message = "`pip install pygame` required when `use_ffmpeg=False`"
             raise ValueError(message)
         finally:
-            pygame.mixer.quit()
-            pygame.quit()
+            pygame.mixer.sys.exit(1)
+            pygame.sys.exit(1)
 
     if use_pygame:
         await pygame_play(audio_file)
@@ -129,7 +130,7 @@ async def play_greeting_audio(detected_person):
         await play_text_as_audio(greeting_text)
     except KeyboardInterrupt:
         logger.info("Keyboard interrupt detected")
-        quit()
+        sys.exit(1)
     except Exception as e:
         logger.error("Unexpected error during greeting audio:", e)
 # ----------------------------------------------------------------------------

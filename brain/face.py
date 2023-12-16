@@ -1,5 +1,6 @@
 import os
 import cv2
+import sys
 import pickle
 import face_recognition
 from collections import Counter
@@ -80,7 +81,7 @@ async def recognize_faces(video_capture, known_face_encodings, known_face_names)
 
     except KeyboardInterrupt:
         logger.info("Keyboard interrupt detected")
-        quit()
+        sys.exit(1)
     except Exception as e:
         logger.error("Unexpected error during face recognition:", exc_info=True)
 
@@ -152,6 +153,6 @@ async def run_face_recognition():
         return detected_name if detected_name else "User"
     except KeyboardInterrupt:
         logger.info("Keyboard interrupt detected during face recognition.")
-        quit()
+        sys.exit(1)
     except Exception as e:
         logger.error("Unexpected error during face recognition:", exc_info=True)

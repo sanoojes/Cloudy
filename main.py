@@ -243,7 +243,7 @@ def recognize_speech(recognizer, source):
             time.sleep(1)  # Wait for a while before retrying
         except KeyboardInterrupt:
             logger.info("Keyboard interrupt detected")
-            quit()
+            sys.exit(1)
         except Exception as e:
             logger.exception("Error occurred: %s", e)
 # ----------------------------------------------------------------------------
@@ -281,12 +281,12 @@ async def handle_conversation(recognizer, username):
                     break
     except KeyboardInterrupt:
         logger.info("Conversation terminated by user.")
-        quit()
+        sys.exit(1)
     except Exception as e:
         logger.exception("Unexpected error occurred: %s", e)
     finally:
         logger.info("End of conversation.")
-        quit()
+        sys.exit(1)
 # ----------------------------------------------------------------------------
 
 # ----------------------------------------------------------------------------
@@ -357,7 +357,7 @@ async def process_user_input(recognizer, source, offline_ai_response, messages):
         return True
     except KeyboardInterrupt:
         logger.info("Conversation terminated by user.")
-        quit()
+        sys.exit(1)
     except Exception as e:
         logger.exception("Unexpected error occurred: %s", e)
 # ----------------------------------------------------------------------------
@@ -474,7 +474,7 @@ async def main():
                 break
     except KeyboardInterrupt:
         logger.info("Keyboard interrupt. Turning off the program")
-        quit()
+        sys.exit(1)
 # ----------------------------------------------------------------------------
 
 # ----------------------------------------------------------------------------
@@ -483,5 +483,5 @@ if __name__ == "__main__":
         asyncio.run(main())
     except KeyboardInterrupt:
         logger.info("Keyboard interrupt. Turning off the program")
-        quit()
+        sys.exit(1)
 # ----------------------------------------------------------------------------
