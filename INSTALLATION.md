@@ -1,6 +1,10 @@
-# **Installing Cloudy on Windows**
+# Installing Cloudy on Windows
 
-**`Please choose one of the methods that you prefer to use:`**
+Please choose one of the methods that you prefer to use:
+
+- [Install Python](https://www.python.org/downloads/)
+- [Install Cmake](https://cmake.org/download/)
+- Install FFplay (part of FFmpeg)
 
 ## **Installing FFplay from FFmpeg**
 
@@ -10,7 +14,7 @@
 # installing Chocolatey via Powershell(optional)
 Set-ExecutionPolicy Bypass -Scope Process -Force; iwr https://community.chocolatey.org/install.ps1 -UseBasicParsing | iex
 
-# Installing FFmpeg-Full using Chocolatey
+# Install FFmpeg-Full (which includes FFplay) using Chocolatey
 choco install ffmpeg-full 
 ```
 #### **2.Using scoop:**
@@ -19,7 +23,7 @@ choco install ffmpeg-full
 # Instaling Scoop via Powershell(optional)
 Set-ExecutionPolicy Bypass -Scope Process -Force; Invoke-RestMethod -Uri https://get.scoop.sh | Invoke-Expression
 
-# Installing FFmpeg-Full using scoop
+# Install FFmpeg-Full (which includes FFplay) using scoop
 scoop install ffmpeg
 ```
 
@@ -42,7 +46,7 @@ Invoke-WebRequest -Uri $URL -OutFile "Setup.msix" -UseBasicParsing
 Add-AppxPackage -Path "Setup.msix"
 Remove-Item "Setup.msix"
 
-# Installing FFmpeg-Full using winget
+# Install FFmpeg-Full (which includes FFplay) using winget
 winget install ffmpeg
 ```
 
@@ -52,11 +56,8 @@ winget install ffmpeg
 git clone https://github.com/Sachu-Settan/dlib
 cd dlib
 
-For py 3.7 => pip install .\dlib-19.19.0-cp37-cp37m-win_amd64.whl 
-For py 3.8 => pip install .\dlib-19.19.0-cp38-cp38-win_amd64.whl   
-For py 3.9 => pip install .\dlib-19.22.1-cp39-cp39-win_amd64.whl   
-For py 3.10 => pip install .\dlib-19.22.99-cp310-cp310-win_amd64.whl
-For py 3.11 => pip install .\dlib-19.24.1-cp311-cp311-win_amd64.whl 
+# Replace the filenames according to the available files in the directory
+pip install ./dlib-<version>.whl
 ```
 
 ## **Installing Other Packages For the Project via pip**

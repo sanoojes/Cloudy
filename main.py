@@ -9,6 +9,10 @@ The system interacts with users through speech recognition, AI responses, and fa
 Author: Sachu-Settan
 """
 
+from brain.check import check_modules
+
+print(check_modules())
+
 CONFIG_TYPE = 'config' # 'config' for config.json and 'env' for dotenv file
 # ----------------------------------------------------------------------------
 import contextlib
@@ -45,7 +49,7 @@ def setup_logging(log_file):
     Parameters:
     - log_file (str): Path to the log file.
     """
-    logging.basicConfig(level=LOGGING_LEVEL, format="%(levelname)s - %(message)s")
+    logging.basicConfig(level=LOGGING_LEVEL, format="%(message)s")
     logger = logging.getLogger()
     handler = logging.FileHandler(log_file, mode="a")  # Append mode
     formatter = logging.Formatter("%(levelname)s - %(message)s")
@@ -366,7 +370,6 @@ async def load_user():
     Returns:
     - str: Detected username.
     """
-    logger.info("Detecting Face....")
     detected_name = await run_face_recognition()
     logging.info("Detected User: " + detected_name)
     return detected_name

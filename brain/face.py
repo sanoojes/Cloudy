@@ -65,6 +65,7 @@ async def recognize_faces(video_capture, known_face_encodings, known_face_names)
                     name = known_face_names[matched_index]
                 else:
                     name = await register_new_user(face_encoding, known_face_encodings, known_face_names)
+                    logger.info("Detecting Face....")
 
                 face_names.append(name)
 
@@ -143,6 +144,7 @@ def is_valid_name(name):
 # Main function to run face recognition
 async def run_face_recognition():
     try:
+        logger.info("Detecting Face....")
         video_capture = cv2.VideoCapture(0)
         known_face_encodings, known_face_names = load_facial_data()
         detected_name = await recognize_faces(video_capture, known_face_encodings, known_face_names)
