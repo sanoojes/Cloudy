@@ -1,135 +1,80 @@
-# **Installation Guide for Cloudy**
+# **Installing Cloudy on Windows**
 
-## **Python Installation (Use 3.9 or 3.9+)**
+**`Please choose one of the methods that you prefer to use:`**
 
-### **Windows**
+## **Installing FFplay from FFmpeg**
 
-1. Download the latest Python installer for Windows from [python.org](https://www.python.org/downloads/windows/).
-2. Run the installer and select the option to add Python to PATH.
-3. Follow the installation instructions, and Python will be installed on your system.
-
-### **Linux**
-
-1. Python is generally pre-installed on most Linux distributions. Use the package manager specific to your distribution to install Python if it's not already installed. For example, on Ubuntu:
-
-    ```bash
-    sudo apt update
-    sudo apt install python3.9
-    ```
-
-## **Package Installation**
-
-Open a terminal or command prompt and use `pip` to install the required packages.
-
-#### **For Windows**
+### **1.Using chocolatey:**
 
 ```bash
-# pip install cmake
-# pip install dlib 
-# If you got error in dlib use precompiled dlib wheels
-# https://github.com/Sachu-Settan/dlib 
-# pip install opencv-python-headless
-# pip install numpy
-# pip install pygame
-# pip install aiohttp
-# pip install gTTS
-# pip install face-recognition
-# pip install openai
-# pip install pyaudio
-# pip install python-dotenv
-# pip install SpeechRecognition
-```
+# installing Chocolatey via Powershell(optional)
+Set-ExecutionPolicy Bypass -Scope Process -Force; iwr https://community.chocolatey.org/install.ps1 -UseBasicParsing | iex
 
-#### **For Linux**
+# Installing FFmpeg-Full using Chocolatey
+choco install ffmpeg-full 
+```
+#### **2.Using scoop:**
 
 ```bash
-# sudo apt-get install python3-opencv
+# Instaling Scoop via Powershell(optional)
+Set-ExecutionPolicy Bypass -Scope Process -Force; Invoke-RestMethod -Uri https://get.scoop.sh | Invoke-Expression
+
+# Installing FFmpeg-Full using scoop
+scoop install ffmpeg
 ```
+
+### **3.Using winget**
 
 ```bash
-# pip install cmake
-# pip install dlib
-# pip install opencv-python-headless
-# pip install numpy
-# pip install pygame
-# pip install aiohttp
-# pip install gTTS
-# pip install pyaudio
-# pip install face-recognition
-# pip install openai
-# pip install python-dotenv
-# pip install SpeechRecognition
+# Installing Winget from Prowershell  
+
+# Get latest winget download url
+$URL = "https://api.github.com/repos/microsoft/winget-cli/releases/latest"
+$URL = (Invoke-WebRequest -Uri $URL).Content | ConvertFrom-Json |
+        Select-Object -ExpandProperty "assets" |
+        Where-Object "browser_download_url" -Match '.msixbundle' |
+        Select-Object -ExpandProperty "browser_download_url"
+
+# Download winget
+Invoke-WebRequest -Uri $URL -OutFile "Setup.msix" -UseBasicParsing
+
+# install and remove residue
+Add-AppxPackage -Path "Setup.msix"
+Remove-Item "Setup.msix"
+
+# Installing FFmpeg-Full using winget
+winget install ffmpeg
 ```
 
-## **Additional Steps**
-
-### **Setting up Secrets and Configuration** 
-### **NOTE:** Please Select config or dotenv before setting up your default variables in [main.py](main.py#11)
-
-#### Setting up [Config.json](config.json)
+## **Installing Dlib for Windows**
 
 ```bash
-{
-    "OPENAI_API_KEY":"Your OpenAI API key",
-    "LOG_FILE" :"db/logs.log",
-    "GOOGLE_CX":"Your Google CX Key For Programmable Custom Search Engine",
-    "GOOGLE_API_KEY":"Your Google API Key",
-    "TRAINING_FOLDER":"training",
-    "FACIAL_DATA_FOLDER":"face_data",
-    "FACIAL_DATA_FILE":"facial_data.json",
-    "OFFLINE_DATA_FOLDER":"training//offline",
-    "MESSAGES_DATA_FOLDER":"db/messages",
-    "EDGE_VOICE_NAME":"en-US-JennyNeural",
-    "RECOGNIZER_MODEL":"google",
-    "CHECK_INTERNET_URL":"https://1.1.1.1",
-    "TTS_FILE": "./src/data.mp3"
-} 
+git clone https://github.com/Sachu-Settan/dlib
+cd dlib
+
+For py 3.7 => pip install .\dlib-19.19.0-cp37-cp37m-win_amd64.whl 
+For py 3.8 => pip install .\dlib-19.19.0-cp38-cp38-win_amd64.whl   
+For py 3.9 => pip install .\dlib-19.22.1-cp39-cp39-win_amd64.whl   
+For py 3.10 => pip install .\dlib-19.22.99-cp310-cp310-win_amd64.whl
+For py 3.11 => pip install .\dlib-19.24.1-cp311-cp311-win_amd64.whl 
 ```
 
-#### Setting up [.env](.env)
+## **Installing Other Packages For the Project via pip**
 
-```bash
-OPENAI_API_KEY = Your OpenAI API Key
-LOG_FILE = db/logs.log
-GOOGLE_CX =  Your Google CX Key
-GOOGLE_API_KEY = Your Google API Key
-TRAINING_FOLDER = training    
-FACIAL_DATA_FOLDER = face_data
-FACIAL_DATA_FILE = facial_data.json
-OFFLINE_DATA_FOLDER = training//offline
-MESSAGES_DATA_FOLDER = db/messages
-EDGE_VOICE_NAME = en-US-JennyNeural
-RECOGNIZER_MODEL = google
-CHECK_INTERNET_URL = https://1.1.1.1
-TTS_FILE = ./src/data.mp3
+### **From [requirements.txt](requirements.txt)**
+
+```
+pip install -r ./requirements.txt
 ```
 
-### **Setting Up Environment**
+### **Manual Installation**
 
-#### **For Windows**
-
-[`CMake`](https://cmake.org/):` Download the CMake installer for Windows from cmake.org and follow the installation instructions.`
-
-#### **For Linux**
-
-CMake: Install CMake using your package manager. For example, on Ubuntu:
-
-```bash
-sudo apt update && sudo apt upgrade
-sudo apt install cmake
 ```
+pip install schedule openai speechrecognition python-dotenv aiohttp opencv-python asyncio pygame gtts edge_tts cmake face_recognition pyaudio
+```
+<br>
 
-### **Optional Libraries**
+# Contact For Help
+**`If there is any issue with installation and running`**
 
-- [**os**](https://docs.python.org/3/library/os.html)
-- [**math**](https://docs.python.org/3/library/math.html)
-- [**time**](https://docs.python.org/3/library/time.html)
-- [**json**](https://docs.python.org/3/library/json.html)
-- [**shutil**](https://docs.python.org/3/library/shutil.html)
-- [**asyncio**](https://docs.python.org/3/library/asyncio.html)
-- [**logging**](https://docs.python.org/3/library/logging.html)
-- [**schedule**](https://schedule.readthedocs.io/en/stable/)
-- [**subprocess**](https://docs.python.org/3/library/subprocess.html)
-- [**collections**](https://docs.python.org/3/library/collections.html)
-
-**These are Python standard libraries and are usually included by default with Python. No separate installation is required.**
+**Contact me**: [**`Whatsapp`**](https://wa.me/+919744933034) or **`Discord: sachu_settan`**

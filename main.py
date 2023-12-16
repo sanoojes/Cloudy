@@ -448,7 +448,11 @@ username = "User"
 async def main():
     """Main function to run the conversational AI system."""
     try:
-        await check_internet_connection()
+        connected = await check_internet_connection()
+        if not connected:
+        # Do something when there's no internet connection
+            logger.info("Exiting application due to no internet connection.")
+            exit(404)  # Use an appropriate exit code
         await cleanup_files(folders_to_cleanup)
         recognizer = sr.Recognizer()
         detected_person = await load_user()
@@ -465,8 +469,6 @@ async def main():
             continue_conversation = await handle_conversation(recognizer, detected_person)
             if not continue_conversation:
                 break
-    except NoInternetConnection:
-        exit()
     except KeyboardInterrupt:
         logger.info("Keyboard interrupt. Turning off the program")
         quit()
