@@ -13,7 +13,7 @@ The AI Assistant, codenamed "Cloudy," is a Python-based interactive assistant de
 - **Speech Recognition:** Recognizes speech from user inputs, enabling voice-based interactions.
 - **Face Recognition:** Utilizes OpenCV and face_recognition to identify users through webcam input.
 
-## Installations: Refer [Installation.md](installation.md)
+## Installations: Refer [Installation.md](INSTALLATION.md)
 
 ## Usage
 
