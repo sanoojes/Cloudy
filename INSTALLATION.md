@@ -17,7 +17,7 @@ Set-ExecutionPolicy Bypass -Scope Process -Force; iwr https://community.chocolat
 # Install FFmpeg-Full (which includes FFplay) using Chocolatey
 choco install ffmpeg-full 
 ```
-#### **2.Using scoop:**
+### **2.Using scoop:**
 
 ```bash
 # Instaling Scoop via Powershell(optional)
