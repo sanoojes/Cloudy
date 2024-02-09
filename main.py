@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 AI Conversational System 
 Codename: Cloudy
@@ -6,11 +5,11 @@ Codename: Cloudy
 This script implements an AI conversational system utilizing OpenAI's GPT-3.5 language model.
 The system interacts with users through speech recognition, AI responses, and facial recognition.
 
-Author: Sachu-Settan
+Author: Sachu-Settan i.e, Sanooj
+Lisensed under GNU GPLv3 License.
 """
 
 from brain.check import check_modules
-
 print(check_modules())
 
 CONFIG_TYPE = 'config' # 'config' for config.json and 'env' for dotenv file
