@@ -75,6 +75,9 @@ pip install schedule openai speechrecognition python-dotenv aiohttp opencv-pytho
 ```
 <br>
 
+# Check Configs
+[Check](./main.py#280)
+
 # Contact For Help
 **`If there is any issue with installation and running`**
 

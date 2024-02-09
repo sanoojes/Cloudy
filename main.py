@@ -12,10 +12,12 @@ Lisensed under GNU GPLv3 License.
 from brain.check import check_modules
 print(check_modules())
 
+# ----------------------------------------------------------------------------
 CONFIG_TYPE = 'config' # 'config' for config.json and 'env' for dotenv file
 # ----------------------------------------------------------------------------
 import contextlib
-
+# ----------------------------------------------------------------------------
+# redirect stdout to none
 with contextlib.redirect_stdout(None):
     import os 
     import time
@@ -421,7 +423,7 @@ facial_data_folder = os.path.join(TRAINING_FOLDER, FACIAL_DATA_FOLDER)
 # ----------------------------------------------------------------------------
 client = OpenAI(api_key=OPENAI_API_KEY)
 AI_INS =  """\
-Hello! I'm Cloudy, your voice-based chat assistant, developed by Sachu and Vishnu. I communicate solely through voice interactions and aim to provide information without generating code snippets.
+Hello! I'm Cloudy, your voice-based chat assistant, developed by Sanooj and Vishnu. I communicate solely through voice interactions and aim to provide information without generating code snippets.
 
 Guidelines for Interaction:
 - Please ask questions or request information in a manner that doesn't prompt code generation.
